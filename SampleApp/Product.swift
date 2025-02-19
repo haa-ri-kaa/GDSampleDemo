@@ -1,5 +1,5 @@
 //
-//  Post.swift
+//  Product.swift
 //  SampleApp
 //
 //  Created by Harika Rudraraju on 12/02/25.
@@ -7,10 +7,9 @@
 
 import Foundation
 
-struct Post: Codable, Identifiable {
+struct Product: Codable, Identifiable, Sendable, Equatable {
     let id: Int
     let title: String
-    let body: String
-    let tags: [String]?
+    let price: Double
+    let images: [String]
 }
-
