@@ -7,21 +7,39 @@
 
 import Foundation
 
-protocol APIServiceProtocol {
-    func fetchPosts() async throws -> [Post]
+protocol NetworkServiceProtocol: Sendable {
+    func fetchData<T: Codable>(from url: URL) async throws -> T
 }
 
-class APIService: APIServiceProtocol {
-    func fetchPosts() async throws -> [Post] {
-        let url = URL(string: "https://dummyjson.com/posts")!
-        
+actor NetworkService: NetworkServiceProtocol {
+    func fetchData<T: Codable>(from url: URL) async throws -> T {
         let (data, _) = try await URLSession.shared.data(from: url)
-        let decodedData = try JSONDecoder().decode(PostsResponse.self, from: data)
-        return decodedData.posts
+        return try JSONDecoder().decode(T.self, from: data)
     }
 }
 
-struct PostsResponse: Codable {
-    let posts: [Post]
+class ProductService {
+    static let shared = ProductService(networkService: NetworkService())
+    private let networkService: NetworkServiceProtocol
+    private let baseURL = "https://api.escuelajs.co/api/v1"
+    
+    init(networkService: NetworkServiceProtocol) {
+        self.networkService = networkService
+    }
+    
+    func fetchProducts(offset: Int, limit: Int) async throws -> [Product] {
+        let url = URL(string: "\(baseURL)/products?offset=\(offset)&limit=\(limit)")!
+        return try await networkService.fetchData(from: url)
+    }
+    
+    func fetchProductsByCategory(categoryID: Int) async throws -> [Product] {
+        let url = URL(string: "\(baseURL)/products/?categoryId=\(categoryID)")!
+        return try await networkService.fetchData(from: url)
+    }
+    
+    func fetchProductsByTitle(title: String) async throws -> [Product] {
+        let url = URL(string: "\(baseURL)/products/?title=\(title)")!
+        return try await networkService.fetchData(from: url)
+    }
 }
 
